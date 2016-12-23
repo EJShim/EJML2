@@ -12,7 +12,7 @@ function E_Manager()
   var m_socketMgr = new E_SocketManager(this);
   this.mlMgr = null;
 
-  this.dataset = ["bathub", "bed", "bench", "chair", "cup", "desk", "dresser", "monitor", "nightstand", "sofa", "table", "toilet"];
+  this.dataset = ["bathtub", "bed", "bench", "chair", "cup", "desk", "dresser", "monitor", "nightstand", "sofa", "table", "toilet"];
   this.dataLength = [6, 26, 18, 16, 17, 15, 11, 44, 20, 25, 17, 16];
 
 
