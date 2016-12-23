@@ -43983,19 +43983,19 @@ function E_MLManager(Mgr, network)
   this.Mgr = Mgr;
 
 
-  var layer_defs = [];
-  // input layer of size 1x1x2 (all volumes are 3D)
-  layer_defs.push({type:'input', out_sx:30, out_sy:30, out_depth:30});
-  // some fully connected layers
-  layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
-  // a softmax classifier predicting probabilities for two classes: 0,1
-  layer_defs.push({type:'softmax', num_classes:12});
+  // var layer_defs = [];
+  // // input layer of size 1x1x2 (all volumes are 3D)
+  // layer_defs.push({type:'input', out_sx:30, out_sy:30, out_depth:30});
+  // // some fully connected layers
+  // layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
+  // layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
+  // // a softmax classifier predicting probabilities for two classes: 0,1
+  // layer_defs.push({type:'softmax', num_classes:12});
 
   this.network = new convnetjs.Net();
-  this.network.makeLayers(layer_defs);
-  this.SaveNetwork();
-  //this.network.fromJSON( JSON.parse(network) );
+  //this.network.makeLayers(layer_defs);
+  //this.SaveNetwork();
+  this.network.fromJSON( JSON.parse(network) );
 
   ///Initialize
   this.Initialize();
@@ -44008,7 +44008,9 @@ E_MLManager.prototype.Initialize = function()
 
 E_MLManager.prototype.PutVolume = function( volume )
 {
-  var className = ["Box", "Cone", "Cylinder", "TorusKnot", "Sphere"];
+
+  var className = ["Bathub", "Bed", "Bench", "Chair", "Cup", "Desk", "Dresser", "Monitor", "NightStand", "Sofa", "Table", "Toilet"];
+  var num_class = className.length;
   var length = volume.data.length;
   var convVol = new convnetjs.Vol(length, length, length, 0.0);
 
@@ -44036,7 +44038,7 @@ E_MLManager.prototype.PutVolume = function( volume )
   var max = 0;
   var maxIdx = 0;
 
-  for(var i=0 ; i<5 ; i++){
+  for(var i=0 ; i<num_class ; i++){
     if(probability.w[i] > max){
       max = probability.w[i];
       maxIdx = i;
@@ -44044,7 +44046,7 @@ E_MLManager.prototype.PutVolume = function( volume )
   }
 
   //Show Probability
-  for(var i=0 ; i<5 ; i++){
+  for(var i=0 ; i<num_class ; i++){
     var prob = probability.w[i] * 100
     this.Mgr.AppendLog("<br>");
 
@@ -44093,6 +44095,9 @@ function E_Manager()
 {
   var m_socketMgr = new E_SocketManager(this);
   this.mlMgr = null;
+
+  this.dataset = ["bathub", "bed", "bench", "chair", "cup", "desk", "dresser", "monitor", "nightstand", "sofa", "table", "toilet"];
+  this.dataLength = [6, 26, 18, 16, 17, 15, 11, 44, 20, 25, 17, 16];
 
 
   this.renderer = [];
@@ -44205,66 +44210,47 @@ E_Manager.prototype.Animate = function()
 
 E_Manager.prototype.GenerateRandomObject = function()
 {
+  var that = this;
   var scene = this.renderer[0].scene;
   var camera = this.renderer[0].camera;
 
-  var idx = Math.round(Math.random() * 4);
-  cl = idx;
-  var geometry, material, mesh, cl;
+  var cl = Math.round(Math.random() * 11);
+  var idx = Math.round(Math.random() * this.dataLength[cl]);
+
+  var path =  "./data/TestSet/" + this.dataset[cl] + "/" + idx + ".obj";
 
 
-  if( idx === 0){
-    geometry = new THREE.BoxGeometry( Math.random()*5, Math.random()*5, Math.random()*5 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else if(idx === 1){
+  //Generate Mesh from obj list.
+  var loader = new THREE.OBJLoader();
+  //Path, according to cl
+  loader.load( path, function ( object ) {
 
-    geometry = new THREE.ConeGeometry( Math.random()*5+1, Math.random()*20, 32 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else if(idx === 2){
+    var mesh = object.children[0];
+    mesh.material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
 
-    var rad = Math.random()*5+1
-    var height = Math.random()*10+1;
-    geometry = new THREE.CylinderGeometry( rad, rad, height, 32 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else if(idx === 3){
+    //mesh.geometry.mergeVertices();
+    mesh.class = cl;
 
-    geometry = new THREE.TorusKnotGeometry( Math.random()*10, Math.random()*3, 100, 16 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else{
+    //Random Rotation
+    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.random()*Math.PI*2 ) );
+    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationY( Math.random()*Math.PI*2 ) );
+    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( Math.random()*Math.PI*2 ) );
+    mesh.material.color = new THREE.Color(Math.random()+0.5, Math.random()+0.2, Math.random());
 
-    geometry = new THREE.SphereGeometry(Math.random()*5, 32, 32);
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }
+    //Add to Scene
+    scene.add( mesh );
+    camera.lookAt(mesh.position);
 
-
-  //Random Color, Not Important
-  mesh.geometry.mergeVertices();
-  mesh.class = null;
-
-  //Random Rotation
-  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.random()*Math.PI*2 ) );
-  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationY( Math.random()*Math.PI*2 ) );
-  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( Math.random()*Math.PI*2 ) );
-  material.color = new THREE.Color(Math.random()+0.5, Math.random()+0.2, Math.random());
-
-  //Add to Scene
-  scene.add( mesh );
-  camera.lookAt(mesh.position);
-
-  //Redraw Scene
-  this.GenerateVoxelizedObject(mesh);
-  this.Redraw();
+    //Redraw Scene
+    that.GenerateVoxelizedObject(mesh);
+    that.Redraw();
+  } );
 }
 
 E_Manager.prototype.GenerateVoxelizedObject = function(mesh)
 {
-  //Make 20x20x20 voxel volume data
-  var segments = 20;
+  //Make 30x30x30 voxel volume data
+  var segments = 30;
 
   //right scene
   var orScene = this.renderer[0].scene;
@@ -44592,10 +44578,7 @@ var l_toolBar = {view:"toolbar",
                       offIcon:"play",  onIcon:"pause",
                       offLabel:"Run Trainning", onLabel:"Stop Trainning"
                   },
-
-
-                  //Generate Random Object and run classification
-                  {id:"ID_REFRESH", view:"button", value:"Generate Random Polygon", width:250},
+                            
                   {id:"ID_UPLOAD_OBJ", view:"button", value:"Upload OBJ", width:250},
                   {id:"ID_UPLOAD_STL", view:"button", value:"Upload STL", width:250}
                 ]};
@@ -44653,12 +44636,6 @@ $$("ID_LOG").attachEvent("onViewResize", function(){
 });
 
 
-
-///button
-$$("ID_REFRESH").attachEvent("onItemClick", function(id){
-  //this.select(id);
-  Manager.ClearScene();
-});
 
 $$("ID_TOGGLE_TRAINNING").attachEvent("onItemClick", function(id){
   Manager.OnRunTrainning(this.getValue());

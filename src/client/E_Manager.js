@@ -12,6 +12,9 @@ function E_Manager()
   var m_socketMgr = new E_SocketManager(this);
   this.mlMgr = null;
 
+  this.dataset = ["bathub", "bed", "bench", "chair", "cup", "desk", "dresser", "monitor", "nightstand", "sofa", "table", "toilet"];
+  this.dataLength = [6, 26, 18, 16, 17, 15, 11, 44, 20, 25, 17, 16];
+
 
   this.renderer = [];
 
@@ -123,66 +126,47 @@ E_Manager.prototype.Animate = function()
 
 E_Manager.prototype.GenerateRandomObject = function()
 {
+  var that = this;
   var scene = this.renderer[0].scene;
   var camera = this.renderer[0].camera;
 
-  var idx = Math.round(Math.random() * 4);
-  cl = idx;
-  var geometry, material, mesh, cl;
+  var cl = Math.round(Math.random() * 11);
+  var idx = Math.round(Math.random() * this.dataLength[cl]);
+
+  var path =  "./data/TestSet/" + this.dataset[cl] + "/" + idx + ".obj";
 
 
-  if( idx === 0){
-    geometry = new THREE.BoxGeometry( Math.random()*5, Math.random()*5, Math.random()*5 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else if(idx === 1){
+  //Generate Mesh from obj list.
+  var loader = new THREE.OBJLoader();
+  //Path, according to cl
+  loader.load( path, function ( object ) {
 
-    geometry = new THREE.ConeGeometry( Math.random()*5+1, Math.random()*20, 32 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else if(idx === 2){
+    var mesh = object.children[0];
+    mesh.material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
 
-    var rad = Math.random()*5+1
-    var height = Math.random()*10+1;
-    geometry = new THREE.CylinderGeometry( rad, rad, height, 32 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else if(idx === 3){
+    //mesh.geometry.mergeVertices();
+    mesh.class = cl;
 
-    geometry = new THREE.TorusKnotGeometry( Math.random()*10, Math.random()*3, 100, 16 );
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }else{
+    //Random Rotation
+    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.random()*Math.PI*2 ) );
+    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationY( Math.random()*Math.PI*2 ) );
+    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( Math.random()*Math.PI*2 ) );
+    mesh.material.color = new THREE.Color(Math.random()+0.5, Math.random()+0.2, Math.random());
 
-    geometry = new THREE.SphereGeometry(Math.random()*5, 32, 32);
-    material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
-    mesh = new THREE.Mesh( geometry, material );
-  }
+    //Add to Scene
+    scene.add( mesh );
+    camera.lookAt(mesh.position);
 
-
-  //Random Color, Not Important
-  mesh.geometry.mergeVertices();
-  mesh.class = null;
-
-  //Random Rotation
-  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.random()*Math.PI*2 ) );
-  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationY( Math.random()*Math.PI*2 ) );
-  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( Math.random()*Math.PI*2 ) );
-  material.color = new THREE.Color(Math.random()+0.5, Math.random()+0.2, Math.random());
-
-  //Add to Scene
-  scene.add( mesh );
-  camera.lookAt(mesh.position);
-
-  //Redraw Scene
-  this.GenerateVoxelizedObject(mesh);
-  this.Redraw();
+    //Redraw Scene
+    that.GenerateVoxelizedObject(mesh);
+    that.Redraw();
+  } );
 }
 
 E_Manager.prototype.GenerateVoxelizedObject = function(mesh)
 {
-  //Make 20x20x20 voxel volume data
-  var segments = 20;
+  //Make 30x30x30 voxel volume data
+  var segments = 30;
 
   //right scene
   var orScene = this.renderer[0].scene;

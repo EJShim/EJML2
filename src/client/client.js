@@ -12,10 +12,7 @@ var l_toolBar = {view:"toolbar",
                       offIcon:"play",  onIcon:"pause",
                       offLabel:"Run Trainning", onLabel:"Stop Trainning"
                   },
-
-
-                  //Generate Random Object and run classification
-                  {id:"ID_REFRESH", view:"button", value:"Generate Random Polygon", width:250},
+                            
                   {id:"ID_UPLOAD_OBJ", view:"button", value:"Upload OBJ", width:250},
                   {id:"ID_UPLOAD_STL", view:"button", value:"Upload STL", width:250}
                 ]};
@@ -73,12 +70,6 @@ $$("ID_LOG").attachEvent("onViewResize", function(){
 });
 
 
-
-///button
-$$("ID_REFRESH").attachEvent("onItemClick", function(id){
-  //this.select(id);
-  Manager.ClearScene();
-});
 
 $$("ID_TOGGLE_TRAINNING").attachEvent("onItemClick", function(id){
   Manager.OnRunTrainning(this.getValue());

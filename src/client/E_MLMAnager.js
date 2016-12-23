@@ -7,19 +7,19 @@ function E_MLManager(Mgr, network)
   this.Mgr = Mgr;
 
 
-  var layer_defs = [];
-  // input layer of size 1x1x2 (all volumes are 3D)
-  layer_defs.push({type:'input', out_sx:30, out_sy:30, out_depth:30});
-  // some fully connected layers
-  layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
-  // a softmax classifier predicting probabilities for two classes: 0,1
-  layer_defs.push({type:'softmax', num_classes:12});
+  // var layer_defs = [];
+  // // input layer of size 1x1x2 (all volumes are 3D)
+  // layer_defs.push({type:'input', out_sx:30, out_sy:30, out_depth:30});
+  // // some fully connected layers
+  // layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
+  // layer_defs.push({type:'fc', num_neurons:20, activation:'relu'});
+  // // a softmax classifier predicting probabilities for two classes: 0,1
+  // layer_defs.push({type:'softmax', num_classes:12});
 
   this.network = new convnetjs.Net();
-  this.network.makeLayers(layer_defs);
-  this.SaveNetwork();
-  //this.network.fromJSON( JSON.parse(network) );
+  //this.network.makeLayers(layer_defs);
+  //this.SaveNetwork();
+  this.network.fromJSON( JSON.parse(network) );
 
   ///Initialize
   this.Initialize();
@@ -32,7 +32,9 @@ E_MLManager.prototype.Initialize = function()
 
 E_MLManager.prototype.PutVolume = function( volume )
 {
-  var className = ["Box", "Cone", "Cylinder", "TorusKnot", "Sphere"];
+
+  var className = ["Bathub", "Bed", "Bench", "Chair", "Cup", "Desk", "Dresser", "Monitor", "NightStand", "Sofa", "Table", "Toilet"];
+  var num_class = className.length;
   var length = volume.data.length;
   var convVol = new convnetjs.Vol(length, length, length, 0.0);
 
@@ -60,7 +62,7 @@ E_MLManager.prototype.PutVolume = function( volume )
   var max = 0;
   var maxIdx = 0;
 
-  for(var i=0 ; i<5 ; i++){
+  for(var i=0 ; i<num_class ; i++){
     if(probability.w[i] > max){
       max = probability.w[i];
       maxIdx = i;
@@ -68,7 +70,7 @@ E_MLManager.prototype.PutVolume = function( volume )
   }
 
   //Show Probability
-  for(var i=0 ; i<5 ; i++){
+  for(var i=0 ; i<num_class ; i++){
     var prob = probability.w[i] * 100
     this.Mgr.AppendLog("<br>");
 
