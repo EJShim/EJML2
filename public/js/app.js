@@ -44091,13 +44091,34 @@ var E_Interactor = require('./E_Interactor.js');
 
 //STL Loader
 var STLLoader = require('three-stl-loader')(THREE);
+
+
+
 function E_Manager()
 {
   var m_socketMgr = new E_SocketManager(this);
   this.mlMgr = null;
 
   this.dataset = ["bathtub", "bed", "bench", "chair", "cup", "desk", "dresser", "monitor", "nightstand", "sofa", "table", "toilet"];
-  this.dataLength = [6, 26, 18, 16, 17, 15, 11, 44, 20, 25, 17, 16];
+  this.dataLength = [6, 25, 18, 16, 17, 15, 11, 44, 20, 22, 15, 16];
+  this.meshMap = [];
+
+  var mapI = this.dataset.length;
+  var mapJ = 0;
+
+  for(var i=0 ; i<this.dataLength.length ; i++){
+    if(this.dataLength[i] > mapJ){
+      mapJ = this.dataLength[i];
+    }
+  }
+
+  //Make mapI x mapJ mesh Map
+  for(var i=0 ; i< mapI ; i++){
+    this.meshMap.push([]);
+    for(var j=0 ; j<mapJ ; j++){
+      this.meshMap[i].push(false);
+    }
+  }
 
 
   this.renderer = [];
@@ -44211,40 +44232,63 @@ E_Manager.prototype.Animate = function()
 E_Manager.prototype.GenerateRandomObject = function()
 {
   var that = this;
-  var scene = this.renderer[0].scene;
-  var camera = this.renderer[0].camera;
 
   var cl = Math.round(Math.random() * 11);
   var idx = Math.round(Math.random() * this.dataLength[cl]);
 
-  var path =  "./data/TestSet/" + this.dataset[cl] + "/" + idx + ".obj";
+  if(this.meshMap[cl][idx] === false){
+    //Import OBJs
+    var path =  "./data/TestSet/" + this.dataset[cl] + "/" + idx + ".obj";
+    console.log("Trying to load " + path);
+
+    //Generate Mesh from obj list.
+    var loader = new THREE.OBJLoader();
+    //Path, according to cl
+    loader.load( path, function ( object ) {
+
+      var mesh = object.children[0];
+
+      //Store mesh in the list
+      that.meshMap[cl][idx] = mesh;
+      that.MakeMesh(mesh, cl);
+
+    });
+  }else{
+    //Load Stored Mesh (might be faster then loading obj file)
+    console.log("load");
+    var mesh = this.meshMap[cl][idx];
+    this.MakeMesh(mesh, cl);
+  }
+}
+
+E_Manager.prototype.MakeMesh = function(mesh, cl)
+{
+  var scene = this.renderer[0].scene;
+  var camera = this.renderer[0].camera;
 
 
-  //Generate Mesh from obj list.
-  var loader = new THREE.OBJLoader();
-  //Path, according to cl
-  loader.load( path, function ( object ) {
+  mesh.class = cl;
+  //mesh.class = null;
 
-    var mesh = object.children[0];
-    mesh.material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
+  //Materal
+  mesh.material = new THREE.MeshPhongMaterial({shading:THREE.SmoothShading, shininess:10, specular:0xaaaaaa, side:THREE.DoubleSide});
+  mesh.material.color = new THREE.Color(Math.random()+0.5, Math.random()+0.2, Math.random());
 
-    //mesh.geometry.mergeVertices();
-    mesh.class = cl;
 
-    //Random Rotation
-    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.random()*Math.PI*2 ) );
-    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationY( Math.random()*Math.PI*2 ) );
-    mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( Math.random()*Math.PI*2 ) );
-    mesh.material.color = new THREE.Color(Math.random()+0.5, Math.random()+0.2, Math.random());
 
-    //Add to Scene
-    scene.add( mesh );
-    camera.lookAt(mesh.position);
+  //Random Rotation
+  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationX( Math.random()*Math.PI*2 ) );
+  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationY( Math.random()*Math.PI*2 ) );
+  mesh.geometry.applyMatrix( new THREE.Matrix4().makeRotationZ( Math.random()*Math.PI*2 ) );
 
-    //Redraw Scene
-    that.GenerateVoxelizedObject(mesh);
-    that.Redraw();
-  } );
+  //Redraw Scene
+  this.GenerateVoxelizedObject(mesh);
+
+
+  //Add to Scene
+  scene.add( mesh );
+  camera.lookAt(mesh.position);
+  this.Redraw();
 }
 
 E_Manager.prototype.GenerateVoxelizedObject = function(mesh)
@@ -44288,6 +44332,8 @@ E_Manager.prototype.GenerateVoxelizedObject = function(mesh)
 
 
   var min = geometry.boundingBox.min;
+  var ghostScene = [];
+  ghostScene.push(mesh);
 
 
   ///Find Where Voxel Should Be Placed = Using Raycaster
@@ -44297,8 +44343,7 @@ E_Manager.prototype.GenerateVoxelizedObject = function(mesh)
       var origin = this.VoxelIdxToPosition(min, voxelSize, {x:i, y:j, z:0});
       var rayCaster = new THREE.Raycaster(origin,rayDir, 0, rad*2+1);
       origin.add( rayDir.clone().multiplyScalar(-1) );
-
-      var intersects = rayCaster.intersectObjects( orScene.children );
+      var intersects = rayCaster.intersectObjects( ghostScene );
 
       var length = intersects.length
       if(length > 0){
@@ -44336,7 +44381,7 @@ E_Manager.prototype.GenerateVoxelizedObject = function(mesh)
       var rayCaster = new THREE.Raycaster(origin,rayDir, 0, rad*2+1);
       origin.add( rayDir.clone().multiplyScalar(-1) );
 
-      var intersects = rayCaster.intersectObjects( orScene.children );
+      var intersects = rayCaster.intersectObjects( ghostScene );
 
       var length = intersects.length
       if(length > 0){
@@ -44368,10 +44413,7 @@ E_Manager.prototype.GenerateVoxelizedObject = function(mesh)
 
   //Visualize voxelSpace
   this.VisualizeVoxels(box, voxelSpace, segments, voxelSize, min, scene);
-
-
   this.mlMgr.PutVolume({data:voxelSpace, class:mesh.class});
-
 }
 
 E_Manager.prototype.VisualizeVoxels = function(box, voxelSpace, segments, voxelSize, min, scene)
@@ -44491,6 +44533,8 @@ E_Manager.prototype.ImportMesh = function(path)
     mesh.class = null;
     that.GenerateVoxelizedObject(mesh);
     that.Redraw();
+
+    delete this;
   } );
 }
 
@@ -44515,6 +44559,8 @@ E_Manager.prototype.ImportSTL = function(path)
     mesh.class = null;
     that.GenerateVoxelizedObject(mesh);
     that.Redraw();
+
+    delete this;
   } );
 }
 
