@@ -75,9 +75,17 @@ E_MLManager.prototype.PutVolume = function( volume )
     this.Mgr.AppendLog("<br>");
 
     if(i === maxIdx){
-        this.Mgr.AppendLog("<b>" + className[i] + " : " + prob.toFixed(4) + " %</b>");
+        if(i === volume.class){
+          this.Mgr.AppendLog("<b style='color:green'>" + className[i] + " : " + prob.toFixed(4) + " %</b>");
+        }else{
+          this.Mgr.AppendLog("<b>" + className[i] + " : " + prob.toFixed(4) + " %</b>");
+        }
     }else{
-      this.Mgr.AppendLog(className[i] + " : " + prob.toFixed(4) + " %");
+      if(i === volume.class){
+        this.Mgr.AppendLog("<p style='color:green'>" + className[i] + " : " + prob.toFixed(4) + " %<p>");
+      }else{
+        this.Mgr.AppendLog("<p>"className[i] + " : " + prob.toFixed(4) + " %<p>");
+      }
     }
   }
 
