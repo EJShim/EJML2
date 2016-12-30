@@ -12,7 +12,7 @@ var l_toolBar = {view:"toolbar",
                       offIcon:"play",  onIcon:"pause",
                       offLabel:"Run Trainning", onLabel:"Stop Trainning"
                   },
-                            
+
                   {id:"ID_UPLOAD_OBJ", view:"button", value:"Upload OBJ", width:250},
                   {id:"ID_UPLOAD_STL", view:"button", value:"Upload STL", width:250}
                 ]};
@@ -25,7 +25,7 @@ var l_leftMenu = {id:"ID_VIEW_LEFT", view:"template"};
 var l_rightMenu = {id:"ID_VIEW_RIGHT", view:"template"};
 
 //Log Menuv
-var l_logMenu = {id:"ID_LOG", view:"template", gravity:0.3};
+var l_logMenu = {id:"ID_LOG", view:"template", gravity:0.5};
 
 var layout = new webix.ui({
   rows:[

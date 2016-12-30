@@ -44051,9 +44051,17 @@ E_MLManager.prototype.PutVolume = function( volume )
     this.Mgr.AppendLog("<br>");
 
     if(i === maxIdx){
-        this.Mgr.AppendLog("<b>" + className[i] + " : " + prob.toFixed(4) + " %</b>");
+        if(i === volume.class){
+          this.Mgr.AppendLog("<b style='color:green'>" + className[i] + " : " + prob.toFixed(4) + " %</b>");
+        }else{
+          this.Mgr.AppendLog("<b>" + className[i] + " : " + prob.toFixed(4) + " %</b>");
+        }
     }else{
-      this.Mgr.AppendLog(className[i] + " : " + prob.toFixed(4) + " %");
+      if(i === volume.class){
+        this.Mgr.AppendLog("<div style='color:green'>" + className[i] + " : " + prob.toFixed(4) + " %</div>");
+      }else{
+        this.Mgr.AppendLog("<div>" + className[i] + " : " + prob.toFixed(4) + " %</div>");
+      }
     }
   }
 
@@ -44624,7 +44632,7 @@ var l_toolBar = {view:"toolbar",
                       offIcon:"play",  onIcon:"pause",
                       offLabel:"Run Trainning", onLabel:"Stop Trainning"
                   },
-                            
+
                   {id:"ID_UPLOAD_OBJ", view:"button", value:"Upload OBJ", width:250},
                   {id:"ID_UPLOAD_STL", view:"button", value:"Upload STL", width:250}
                 ]};
@@ -44637,7 +44645,7 @@ var l_leftMenu = {id:"ID_VIEW_LEFT", view:"template"};
 var l_rightMenu = {id:"ID_VIEW_RIGHT", view:"template"};
 
 //Log Menuv
-var l_logMenu = {id:"ID_LOG", view:"template", gravity:0.3};
+var l_logMenu = {id:"ID_LOG", view:"template", gravity:0.5};
 
 var layout = new webix.ui({
   rows:[

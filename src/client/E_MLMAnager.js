@@ -82,9 +82,9 @@ E_MLManager.prototype.PutVolume = function( volume )
         }
     }else{
       if(i === volume.class){
-        this.Mgr.AppendLog("<p style='color:green'>" + className[i] + " : " + prob.toFixed(4) + " %<p>");
+        this.Mgr.AppendLog("<div style='color:green'>" + className[i] + " : " + prob.toFixed(4) + " %</div>");
       }else{
-        this.Mgr.AppendLog("<p>"className[i] + " : " + prob.toFixed(4) + " %<p>");
+        this.Mgr.AppendLog("<div>" + className[i] + " : " + prob.toFixed(4) + " %</div>");
       }
     }
   }
